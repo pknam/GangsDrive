@@ -5,12 +5,15 @@ using System.Text;
 using DokanNet;
 using System.IO;
 using FileAccess = DokanNet.FileAccess;
+using DiscUtils.Iso9660;
 
 namespace GangsDrive
 {
     class GangsISODriver : IDokanOperations
     {
         private string isoPath;
+        private FileStream isoFileStream;
+        private CDReader isoReader;
 
         public GangsISODriver(string isoPath)
         {
@@ -18,13 +21,44 @@ namespace GangsDrive
                 throw new ArgumentException("file not found");
 
             this.isoPath = isoPath;
+            this.isoFileStream = File.Open(isoPath, FileMode.Open, System.IO.FileAccess.Read, FileShare.None);
+            this.isoReader = new CDReader(this.isoFileStream, true);
         }
 
         #region Implementation of IDokanOperations
 
         public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            bool pathExists = this.isoReader.Exists(fileName);
+            bool pathIsDirectory = this.isoReader.DirectoryExists(fileName);
+
+            switch(mode)
+            {
+                case FileMode.Open:
+                    break;
+
+                case FileMode.CreateNew:
+                    break;
+
+                case FileMode.Truncate:
+                    break;
+                    
+                default:
+                    break;
+            }
+
+            try
+            {
+                info.Context = this.isoReader.OpenFile(fileName, FileMode.Open);
+            }
+            catch(Exception)
+            {
+                return DokanResult.Unsuccessful;
+            }
+
+
+
+            return DokanResult.Success;
         }
 
         public NtStatus OpenDirectory(string fileName, DokanFileInfo info)
