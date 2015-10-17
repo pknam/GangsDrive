@@ -17,15 +17,21 @@ namespace GangsDrive
 {
     public partial class Form1 : Form
     {
-        bool mounted;
         Thread thread;
-        Mirror mirror;
+
+        Mirror mirrorDriver;
+        bool mirrorMounted;
+
+        GangsISODriver isoDriver;
+        bool isoMounted;
 
         public Form1()
         {
-            mounted = false;
+            mirrorMounted = false;
+            isoMounted = false;
+
             thread = null;
-            mirror = null;
+            mirrorDriver = null;
             InitializeComponent();
         }
 
@@ -33,9 +39,9 @@ namespace GangsDrive
         {
             try
             {
-                mirror = new Mirror("C:");
-                mounted = true;
-                mirror.Mount("n:\\", DokanOptions.DebugMode, 5);
+                mirrorDriver = new Mirror("C:");
+                mirrorMounted = true;
+                mirrorDriver.Mount("n:\\", DokanOptions.DebugMode, 5);
 
                 MessageBox.Show("end");
             }
@@ -45,9 +51,25 @@ namespace GangsDrive
             }
         }
 
+        private void createISODrrive()
+        {
+            try
+            {
+                isoDriver = new GangsISODriver(@"D:\GangsBox_WebDAV\Installer\AcrobatPro11.iso");
+                isoMounted = true;
+                isoDriver.Mount("i:\\", DokanOptions.DebugMode, 5);
+
+                MessageBox.Show("iso end");
+            }
+            catch(DokanException ex)
+            {
+                MessageBox.Show("Error : " + ex.Message);
+            }
+        }
+
         private void Start_Click(object sender, EventArgs e)
         {
-            if (mounted)
+            if (mirrorMounted)
                 return;
 
             thread = new Thread(createMirrorDrive);
@@ -57,33 +79,51 @@ namespace GangsDrive
 
         private void Stop_Click(object sender, EventArgs e)
         {
-            if (mounted)
+            if (mirrorMounted)
             {
-                //Dokan.Unmount('N');
                 Dokan.RemoveMountPoint("n:\\");
                 MessageBox.Show("unmounted");
-                mounted = false;
+                mirrorMounted = false;
             }
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            using (FileStream isoStream = File.Open(@"D:\Tools\Forensic\deok9\dban.iso", FileMode.Open))
+            if (isoMounted)
+                return;
+
+            thread = new Thread(createISODrrive);
+            thread.Start();
+            MessageBox.Show("thread create");
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (isoMounted)
             {
-                CDReader cd = new CDReader(isoStream, true);
-                string[] files = cd.GetFiles(@"");
-                
-                Stream st = cd.OpenFile(@"ABOUT.TXT", FileMode.Open);
-                byte[] buf = new byte[100];
-                st.Seek(100, SeekOrigin.Begin);
-                st.Read(buf, 0, 50);
-                st.Close();
-
-                string str = System.Text.Encoding.Default.GetString(buf);
-
-                MessageBox.Show(str);
-
+                Dokan.RemoveMountPoint("i:\\");
+                MessageBox.Show("unmounted");
+                isoMounted = false;
             }
         }
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (isoMounted)
+            {
+                Dokan.RemoveMountPoint("i:\\");
+                MessageBox.Show("unmounted");
+                isoMounted = false;
+            }
+
+            if (mirrorMounted)
+            {
+                Dokan.RemoveMountPoint("n:\\");
+                MessageBox.Show("unmounted");
+                mirrorMounted = false;
+            }
+        }
+
+
     }
 }
