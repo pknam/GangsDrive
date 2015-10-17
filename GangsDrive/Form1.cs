@@ -124,6 +124,21 @@ namespace GangsDrive
             }
         }
 
+        private void button3_Click(object sender, EventArgs e)
+        {
+            FileStream isoFileStream = File.Open(@"D:\GangsBox_WebDAV\Installer\AcrobatPro11.iso", FileMode.Open, System.IO.FileAccess.Read, FileShare.None);
+            CDReader isoReader = new CDReader(isoFileStream, true);
+            Stream tt = isoReader.OpenFile("ReadMe.htm", FileMode.Open);
+            byte[] buf = new byte[100];
+            tt.Position = 1;
+            tt.Read(buf, 0, 90);
+            MessageBox.Show(Encoding.Default.GetString(buf));
+
+            tt.Close();
+            isoReader.Dispose();
+            isoFileStream.Close();
+        }
+
 
     }
 }

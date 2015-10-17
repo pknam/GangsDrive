@@ -29,62 +29,43 @@ namespace GangsDrive
 
         public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
         {
-            //bool pathExists = this.isoReader.Exists(fileName);
-            //bool pathIsDirectory = this.isoReader.DirectoryExists(fileName);
+            bool pathExists = this.isoReader.Exists(fileName);
+            bool pathIsDirectory = this.isoReader.DirectoryExists(fileName);
 
-            //switch(mode)
-            //{
-            //    case FileMode.Open:
-            //        if(pathExists)
-            //        {
-            //            info.IsDirectory = pathIsDirectory;
-            //            info.Context = new object();
-
-            //            info.Context = this.isoReader.OpenFile(fileName, FileMode.Open);
-
-            //            return DokanResult.Success;
-            //        }
-            //        else
-            //        {
-            //            return DokanResult.FileNotFound;
-            //        }
-
-            //        break;
-
-            //    case FileMode.CreateNew:
-            //        if (pathExists)
-            //            return DokanResult.FileExists;
-
-            //        break;
-
-            //    case FileMode.Truncate:
-            //        if (!pathExists)
-            //            return DokanResult.FileNotFound;
-
-            //        break;
-                    
-            //    default:
-            //        break;
-            //}
-
-            //try
-            //{
-            //    info.Context = this.isoReader.OpenFile(fileName, FileMode.Open);
-            //}
-            //catch(Exception)
-            //{
-            //    return DokanResult.Unsuccessful;
-            //}
+            if(mode == FileMode.Open)
+            {
+                if (pathExists)
+                {
+                    if (pathIsDirectory)
+                    {
+                        info.IsDirectory = true;
+                        info.Context = new object();
+                    }
+                    else
+                    {
+                        info.IsDirectory = false;
+                        info.Context = this.isoReader.OpenFile(fileName, FileMode.Open) as Stream;
+                    }
+                }
+                else
+                {
+                    return DokanResult.FileNotFound;
+                }
+            }
+            else
+            {
+                return DokanResult.Error;
+            }
 
             return DokanResult.Success;
         }
 
         public NtStatus OpenDirectory(string fileName, DokanFileInfo info)
         {
-            //if(!this.isoReader.DirectoryExists(fileName))
-            //{
-            //    return DokanResult.PathNotFound;
-            //}
+            if (!this.isoReader.DirectoryExists(fileName))
+            {
+                return DokanResult.PathNotFound;
+            }
 
             return DokanResult.Success;
         }
@@ -97,45 +78,44 @@ namespace GangsDrive
 
         public void Cleanup(string fileName, DokanFileInfo info)
         {
-            //if(info.Context != null && info.Context is Stream)
-            //{
-            //    (info.Context as Stream).Dispose();
-            //}
-            //info.Context = null;
+            if (info.Context != null && info.Context is Stream)
+            {
+                (info.Context as Stream).Dispose();
+            }
+            info.Context = null;
 
-            //if(info.DeleteOnClose)
-            //{
-            //    // do nothig
-            //}
+            if (info.DeleteOnClose)
+            {
+                // do nothig
+            }
         }
 
         public void CloseFile(string fileName, DokanFileInfo info)
         {
-            //if (info.Context != null && info.Context is Stream)
-            //{
-            //    (info.Context as Stream).Dispose();
-            //}
-            //info.Context = null;
+            if (info.Context != null && info.Context is Stream)
+            {
+                (info.Context as Stream).Dispose();
+            }
+            info.Context = null;
         }
 
         public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
         {
-            //if(info.Context == null)
-            //{
-            //    using(var stream = this.isoReader.OpenFile(fileName, FileMode.Open, System.IO.FileAccess.Read))
-            //    {
-            //        stream.Position = offset;
-            //        bytesRead = stream.Read(buffer, 0, buffer.Length);
-            //    }
-            //}
-            //else
-            //{
-            //    var stream = info.Context as Stream;
-            //    stream.Position = offset;
-            //    bytesRead = stream.Read(buffer, 0, buffer.Length);
-            //}
+            if (info.Context == null)
+            {
+                using (Stream stream = this.isoReader.OpenFile(fileName, FileMode.Open, System.IO.FileAccess.Read))
+                {
+                    stream.Position = offset;
+                    bytesRead = stream.Read(buffer, 0, buffer.Length);
+                }
+            }
+            else
+            {
+                Stream stream = info.Context as Stream;
+                stream.Position = offset;
+                bytesRead = stream.Read(buffer, 0, buffer.Length);
+            }
 
-            bytesRead = 0;
             return DokanResult.Success;
         }
 
