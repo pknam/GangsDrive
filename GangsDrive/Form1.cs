@@ -17,56 +17,30 @@ namespace GangsDrive
 {
     public partial class Form1 : Form
     {
-        Thread thread;
-        IGangsDriver isoDriver;
+        GangsDriveManager manager;
+        int isoIndex;
 
         public Form1()
         {
-            thread = null;
-            isoDriver = null;
-            InitializeComponent();
-        }
-        private void createISODrrive()
-        {
-            try
-            {
-                isoDriver = new GangsISODriver(@"D:\GangsBox_WebDAV\Installer\AcrobatPro11.iso", "i:\\");
-                isoDriver.Mount();
+            manager = new GangsDriveManager(5);
+            isoIndex = manager.AddDriver(new GangsISODriver(@"D:\GangsBox_WebDAV\Installer\AcrobatPro11.iso", "i:\\"));
 
-                MessageBox.Show("iso end");
-            }
-            catch(DokanException ex)
-            {
-                MessageBox.Show("Error : " + ex.Message);
-            }
+            InitializeComponent();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (isoDriver != null && isoDriver.IsMounted)
-                return;
-
-            thread = new Thread(createISODrrive);
-            thread.Start();
-            MessageBox.Show("thread create");
+            manager.MountDriver(isoIndex);
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            if (isoDriver.IsMounted)
-            {
-                isoDriver.ClearMountPoint();
-                MessageBox.Show("unmounted");
-            }
+            manager.UnmountDriver(isoIndex);
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (isoDriver.IsMounted)
-            {
-                isoDriver.ClearMountPoint();
-                MessageBox.Show("unmounted");
-            }
+            manager.UnmountAllDriver();
         }
 
         private void button3_Click(object sender, EventArgs e)

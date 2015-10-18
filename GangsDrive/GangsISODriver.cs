@@ -21,11 +21,11 @@ namespace GangsDrive
         public GangsISODriver(string isoPath, string mountPoint)
         {
             if (!File.Exists(isoPath))
-                throw new ArgumentException("file not found");
+                throw new FileNotFoundException();
 
             this.isoPath = isoPath;
-            this.isoFileStream = File.Open(isoPath, FileMode.Open, System.IO.FileAccess.Read, FileShare.None);
-            this.isoReader = new CDReader(this.isoFileStream, true);
+            this.isoFileStream = null;
+            this.isoReader = null;
             this.mountPoint = mountPoint;
         }
 
@@ -343,7 +343,12 @@ namespace GangsDrive
             if (IsMounted)
                 return;
 
+            if (!File.Exists(this.isoPath))
+                throw new FileNotFoundException();
+
             this._isMounted = true;
+            this.isoFileStream = File.Open(isoPath, FileMode.Open, System.IO.FileAccess.Read, FileShare.None);
+            this.isoReader = new CDReader(this.isoFileStream, true);
             this.Mount(this.MountPoint, DokanOptions.DebugMode, 5);
         }
 
