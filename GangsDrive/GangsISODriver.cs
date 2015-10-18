@@ -184,26 +184,29 @@ namespace GangsDrive
 
             foreach(var file in fileList)
             {
+                DiscUtils.DiscFileInfo srcFileInfo = this.isoReader.GetFileInfo(file);
                 FileInformation finfo = new FileInformation();
 
                 finfo.FileName = Path.GetFileName(file);
-                finfo.Attributes = FileAttributes.Normal;
-                finfo.CreationTime = DateTime.Now;
-                finfo.LastAccessTime = DateTime.Now;
-                finfo.LastWriteTime = DateTime.Now;
+                finfo.Attributes = srcFileInfo.Attributes;
+                finfo.CreationTime = srcFileInfo.CreationTime;
+                finfo.LastAccessTime = srcFileInfo.LastAccessTime;
+                finfo.LastWriteTime = srcFileInfo.LastWriteTime;
+                finfo.Length = srcFileInfo.Length;
 
                 files.Add(finfo);
             }
 
             foreach(var dir in dirList)
             {
+                DiscUtils.DiscDirectoryInfo srcDirInfo = this.isoReader.GetDirectoryInfo(dir);
                 FileInformation finfo = new FileInformation();
 
                 finfo.FileName = Path.GetFileName(dir);
-                finfo.Attributes = FileAttributes.Directory;
-                finfo.CreationTime = DateTime.Now;
-                finfo.LastAccessTime = DateTime.Now;
-                finfo.LastWriteTime = DateTime.Now;
+                finfo.Attributes = srcDirInfo.Attributes;
+                finfo.CreationTime = srcDirInfo.CreationTime;
+                finfo.LastAccessTime = srcDirInfo.LastAccessTime;
+                finfo.LastWriteTime = srcDirInfo.LastWriteTime;
 
                 files.Add(finfo);
             }
@@ -269,8 +272,9 @@ namespace GangsDrive
 
         public NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName, DokanFileInfo info)
         {
-            volumeLabel = "Gangs";
-            fileSystemName = "Gangs";
+            volumeLabel = Path.GetFileNameWithoutExtension(isoPath);
+            fileSystemName = "GangsDrive";
+
             features = FileSystemFeatures.None;
 
             return DokanResult.Error;
@@ -340,7 +344,7 @@ namespace GangsDrive
                 return;
 
             this._isMounted = true;
-            this.Mount("i:\\", DokanOptions.DebugMode, 5);
+            this.Mount(this.MountPoint, DokanOptions.DebugMode, 5);
         }
 
         #endregion
