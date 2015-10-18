@@ -70,9 +70,17 @@ namespace GangsDrive
             return this.driverSet.IndexOf(tmp);
         }
 
+        public void RemoveDriver(int index)
+        {
+            if (index >= driverSet.Count)
+                return;
+
+            driverSet.RemoveAt(index);
+        }
+
         public void MountDriver(int index)
         {
-            if (index > driverSet.Count)
+            if (index >= driverSet.Count)
                 return;
 
             driverSet[index].Mount();
@@ -80,7 +88,7 @@ namespace GangsDrive
 
         public void UnmountDriver(int index)
         {
-            if (index > driverSet.Count)
+            if (index >= driverSet.Count)
                 return;
 
             driverSet[index].Unmount();
