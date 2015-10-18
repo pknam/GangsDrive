@@ -36,29 +36,41 @@ namespace GangsDrive
             bool pathExists = this.isoReader.Exists(fileName);
             bool pathIsDirectory = this.isoReader.DirectoryExists(fileName);
 
-            if(mode == FileMode.Open)
+            switch(mode)
             {
-                if (pathExists)
-                {
-                    if (pathIsDirectory)
+                case FileMode.OpenOrCreate:
+                case FileMode.Open:
+                case FileMode.Truncate:
+                case FileMode.Append:
+                    if (pathExists)
                     {
-                        info.IsDirectory = true;
-                        info.Context = new object();
+                        if (pathIsDirectory)
+                        {
+                            info.IsDirectory = true;
+                            info.Context = new object();
+                        }
+                        else
+                        {
+                            info.IsDirectory = false;
+                            info.Context = this.isoReader.OpenFile(fileName, FileMode.Open) as Stream;
+                        }
                     }
                     else
                     {
-                        info.IsDirectory = false;
-                        info.Context = this.isoReader.OpenFile(fileName, FileMode.Open) as Stream;
+                        return DokanResult.FileNotFound;
                     }
-                }
-                else
-                {
-                    return DokanResult.FileNotFound;
-                }
-            }
-            else
-            {
-                return DokanResult.Error;
+
+                    break;
+
+                case FileMode.CreateNew:
+                    if (pathExists)
+                        return DokanResult.AlreadyExists;
+
+                    return DokanResult.Error;
+
+                case FileMode.Create:
+                    return DokanResult.Error;
+
             }
 
             return DokanResult.Success;
