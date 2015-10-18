@@ -9,13 +9,16 @@ using DiscUtils.Iso9660;
 
 namespace GangsDrive
 {
-    class GangsISODriver : IDokanOperations
+    class GangsISODriver : IDokanOperations, IGangsDriver
     {
         private string isoPath;
         private FileStream isoFileStream;
         private CDReader isoReader;
 
-        public GangsISODriver(string isoPath)
+        private readonly string mountPoint;
+        private bool _isMounted;
+
+        public GangsISODriver(string isoPath, string mountPoint)
         {
             if (!File.Exists(isoPath))
                 throw new ArgumentException("file not found");
@@ -23,6 +26,7 @@ namespace GangsDrive
             this.isoPath = isoPath;
             this.isoFileStream = File.Open(isoPath, FileMode.Open, System.IO.FileAccess.Read, FileShare.None);
             this.isoReader = new CDReader(this.isoFileStream, true);
+            this.mountPoint = mountPoint;
         }
 
         #region Implementation of IDokanOperations
@@ -73,7 +77,7 @@ namespace GangsDrive
         public NtStatus CreateDirectory(string fileName, DokanFileInfo info)
         {
             // read-only
-            return DokanResult.Error;
+            return DokanResult.AccessDenied;
         }
 
         public void Cleanup(string fileName, DokanFileInfo info)
@@ -295,5 +299,51 @@ namespace GangsDrive
             return DokanResult.NotImplemented;
         } 
         #endregion
+
+        #region Implementation of IGangsDriver
+
+        public bool IsMounted
+        {
+            get
+            {
+                return _isMounted;
+            }
+        }
+
+        public string MountPoint
+        {
+            get
+            {
+                return this.mountPoint;
+            }
+        }
+
+        public void ClearMountPoint()
+        {
+            if (IsMounted)
+            {
+                Dokan.RemoveMountPoint(this.MountPoint);
+
+                if(this.isoReader != null)
+                    this.isoReader.Dispose();
+                
+                if(this.isoFileStream != null)
+                    this.isoFileStream.Dispose();
+
+                this._isMounted = false;
+            }
+        }
+
+        public void Mount()
+        {
+            if (IsMounted)
+                return;
+
+            this._isMounted = true;
+            this.Mount("i:\\", DokanOptions.DebugMode, 5);
+        }
+
+        #endregion
     }
+
 }

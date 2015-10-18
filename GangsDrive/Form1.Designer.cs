@@ -28,32 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.Start = new System.Windows.Forms.Button();
-            this.Stop = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
-            // Start
-            // 
-            this.Start.Location = new System.Drawing.Point(117, 89);
-            this.Start.Name = "Start";
-            this.Start.Size = new System.Drawing.Size(75, 23);
-            this.Start.TabIndex = 0;
-            this.Start.Text = "Mirror Start";
-            this.Start.UseVisualStyleBackColor = true;
-            this.Start.Click += new System.EventHandler(this.Start_Click);
-            // 
-            // Stop
-            // 
-            this.Stop.Location = new System.Drawing.Point(319, 89);
-            this.Stop.Name = "Stop";
-            this.Stop.Size = new System.Drawing.Size(75, 23);
-            this.Stop.TabIndex = 1;
-            this.Stop.Text = "Mirror Stop";
-            this.Stop.UseVisualStyleBackColor = true;
-            this.Stop.Click += new System.EventHandler(this.Stop_Click);
             // 
             // button1
             // 
@@ -93,8 +71,6 @@
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
-            this.Controls.Add(this.Stop);
-            this.Controls.Add(this.Start);
             this.Name = "Form1";
             this.Text = "Form1";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
@@ -104,8 +80,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Button Start;
-        private System.Windows.Forms.Button Stop;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button3;
