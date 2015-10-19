@@ -36,7 +36,11 @@
   <ItemGroup>
     <Reference Include="DiscUtils, Version=0.11.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Downloads\discutils_d28401caab1c\src\bin\Release\DiscUtils.dll</HintPath>
+      <HintPath>packages\discutils\DiscUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="DokanNet, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\dokan\DokanNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -76,7 +80,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -91,10 +94,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DokanNet\DokanNet.csproj">
-      <Project>{a09b408a-26a0-4ff8-83d5-6e1b1da5f63c}</Project>
-      <Name>DokanNet</Name>
-    </ProjectReference>
+    <Content Include="packages\discutils\DiscUtils.dll" />
+    <Content Include="packages\dokan\DokanNet.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
