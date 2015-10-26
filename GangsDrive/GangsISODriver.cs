@@ -76,11 +76,8 @@ namespace GangsDrive
                 case FileMode.Truncate:
                     if (!pathExists)
                         return DokanResult.FileNotFound;
-
-                    info.IsDirectory = false;
-                    info.Context = this.isoReader.OpenFile(fileName, mode, readAccess ? System.IO.FileAccess.Read : System.IO.FileAccess.ReadWrite) as Stream;
-
-                    return DokanResult.Success;
+                    
+                    return DokanResult.Error;
 
                 case FileMode.CreateNew:
                     if (pathExists)
