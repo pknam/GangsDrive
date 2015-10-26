@@ -6,11 +6,20 @@ using DokanNet;
 using System.IO;
 using FileAccess = DokanNet.FileAccess;
 using DiscUtils.Iso9660;
+using System.Windows.Forms;
 
 namespace GangsDrive
 {
     class GangsISODriver : IDokanOperations, IGangsDriver
     {
+        private const FileAccess DataAccess = FileAccess.ReadData | FileAccess.WriteData | FileAccess.AppendData |
+                                              FileAccess.Execute |
+                                              FileAccess.GenericExecute | FileAccess.GenericWrite | FileAccess.GenericRead;
+
+        private const FileAccess DataWriteAccess = FileAccess.WriteData | FileAccess.AppendData |
+                                                   FileAccess.Delete |
+                                                   FileAccess.GenericWrite;
+
         private string isoPath;
         private FileStream isoFileStream;
         private CDReader isoReader;
@@ -36,12 +45,14 @@ namespace GangsDrive
             bool pathExists = this.isoReader.Exists(fileName);
             bool pathIsDirectory = this.isoReader.DirectoryExists(fileName);
 
+            bool readWriteAttributes = (access & DataAccess) == 0;
+            bool readAccess = (access & DataWriteAccess) == 0;
+
             switch(mode)
             {
+                case FileMode.Append:
                 case FileMode.OpenOrCreate:
                 case FileMode.Open:
-                case FileMode.Truncate:
-                case FileMode.Append:
                     if (pathExists)
                     {
                         if (pathIsDirectory)
@@ -52,7 +63,7 @@ namespace GangsDrive
                         else
                         {
                             info.IsDirectory = false;
-                            info.Context = this.isoReader.OpenFile(fileName, FileMode.Open) as Stream;
+                            info.Context = this.isoReader.OpenFile(fileName, mode, readAccess ? System.IO.FileAccess.Read : System.IO.FileAccess.ReadWrite) as Stream;
                         }
                     }
                     else
@@ -61,6 +72,15 @@ namespace GangsDrive
                     }
 
                     break;
+
+                case FileMode.Truncate:
+                    if (!pathExists)
+                        return DokanResult.FileNotFound;
+
+                    info.IsDirectory = false;
+                    info.Context = this.isoReader.OpenFile(fileName, mode, readAccess ? System.IO.FileAccess.Read : System.IO.FileAccess.ReadWrite) as Stream;
+
+                    return DokanResult.Success;
 
                 case FileMode.CreateNew:
                     if (pathExists)
@@ -88,6 +108,9 @@ namespace GangsDrive
 
         public NtStatus CreateDirectory(string fileName, DokanFileInfo info)
         {
+            if (!this.isoReader.DirectoryExists(fileName))
+                return DokanResult.FileExists;
+
             // read-only
             return DokanResult.AccessDenied;
         }
@@ -134,7 +157,7 @@ namespace GangsDrive
 
             return DokanResult.Success;
         }
-
+        
         public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, DokanFileInfo info)
         {
             bytesWritten = 0;
@@ -143,55 +166,76 @@ namespace GangsDrive
 
         public NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
         {
-            return DokanResult.Error;
+            ((Stream)(info.Context)).Flush();
+            return DokanResult.Success;
         }
 
         // check
         public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, DokanFileInfo info)
         {
-            if(this.isoReader.DirectoryExists(fileName))
-            {
-                DiscUtils.DiscDirectoryInfo discDirInfo = this.isoReader.GetDirectoryInfo(fileName);
+            DiscUtils.DiscFileSystemInfo finfo;
 
-                fileInfo = new FileInformation
-                {
-                    FileName = fileName,
-                    Attributes = discDirInfo.Attributes,
-                    CreationTime = discDirInfo.CreationTime,
-                    LastAccessTime = discDirInfo.LastAccessTime,
-                    LastWriteTime = discDirInfo.LastAccessTime,
-                    Length = 0,
-                };
-            }
-            else if(this.isoReader.FileExists(fileName))
-            {
-                DiscUtils.DiscFileInfo discFileInfo = this.isoReader.GetFileInfo(fileName);
-
-                fileInfo = new FileInformation
-                {
-                    FileName = fileName,
-                    Attributes = discFileInfo.Attributes,
-                    CreationTime = discFileInfo.CreationTime,
-                    LastAccessTime = discFileInfo.LastAccessTime,
-                    LastWriteTime = discFileInfo.LastAccessTime,
-                    Length = discFileInfo.Length,
-                };
-            }
+            if (this.isoReader.DirectoryExists(fileName))
+                finfo = this.isoReader.GetDirectoryInfo(fileName);
+            else if (this.isoReader.FileExists(fileName))
+                finfo = this.isoReader.GetFileInfo(fileName);
             else
             {
                 fileInfo = new FileInformation();
                 return DokanResult.FileNotFound;
             }
 
+            fileInfo = new FileInformation
+            {
+                FileName = fileName,
+                Attributes = finfo.Attributes,
+                CreationTime = finfo.CreationTime,
+                LastAccessTime = finfo.LastAccessTime,
+                LastWriteTime = finfo.LastAccessTime,
+                Length = (finfo is DiscUtils.DiscDirectoryInfo) ? 0 : ((DiscUtils.DiscFileInfo)finfo).Length,
+            };
+
+            //if(this.isoReader.DirectoryExists(fileName))
+            //{
+            //    DiscUtils.DiscDirectoryInfo discDirInfo = this.isoReader.GetDirectoryInfo(fileName);
+
+            //    fileInfo = new FileInformation
+            //    {
+            //        FileName = fileName,
+            //        Attributes = discDirInfo.Attributes,
+            //        CreationTime = discDirInfo.CreationTime,
+            //        LastAccessTime = discDirInfo.LastAccessTime,
+            //        LastWriteTime = discDirInfo.LastAccessTime,
+            //        Length = 0,
+            //    };
+            //}
+            //else if(this.isoReader.FileExists(fileName))
+            //{
+            //    DiscUtils.DiscFileInfo discFileInfo = this.isoReader.GetFileInfo(fileName);
+
+            //    fileInfo = new FileInformation
+            //    {
+            //        FileName = fileName,
+            //        Attributes = discFileInfo.Attributes,
+            //        CreationTime = discFileInfo.CreationTime,
+            //        LastAccessTime = discFileInfo.LastAccessTime,
+            //        LastWriteTime = discFileInfo.LastAccessTime,
+            //        Length = discFileInfo.Length,
+            //    };
+            //}
+            //else
+            //{
+            //    fileInfo = new FileInformation();
+            //    return DokanResult.FileNotFound;
+            //}
+
             return DokanResult.Success;
         }
 
-        // check
         public NtStatus FindFiles(string fileName, out IList<FileInformation> files, DokanFileInfo info)
         {
             string[] fileList = this.isoReader.GetFiles(fileName);
             string[] dirList = this.isoReader.GetDirectories(fileName);
-
             files = new List<FileInformation>();
 
             foreach(var file in fileList)
@@ -222,8 +266,6 @@ namespace GangsDrive
 
                 files.Add(finfo);
             }
-
-
 
             return DokanResult.Success;
         }
@@ -289,7 +331,7 @@ namespace GangsDrive
 
             features = FileSystemFeatures.None;
 
-            return DokanResult.Error;
+            return DokanResult.Success;
         }
 
         public NtStatus GetFileSecurity(string fileName, out System.Security.AccessControl.FileSystemSecurity security, System.Security.AccessControl.AccessControlSections sections, DokanFileInfo info)
@@ -349,7 +391,7 @@ namespace GangsDrive
                 this._isMounted = false;
             }
         }
-
+        
         public void Mount()
         {
             if (IsMounted)
