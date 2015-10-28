@@ -22,7 +22,7 @@ namespace GangsDrive
 
         public Form1()
         {
-            manager = new GangsDriveManager(5);
+            manager = GangsDriveManager.Instance;
             isoIndex = manager.AddDriver(new GangsISODriver(@"D:\GangsBox_WebDAV\Installer\AcrobatPro11.iso", "i:\\"));
 
             InitializeComponent();

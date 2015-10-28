@@ -53,7 +53,19 @@ namespace GangsDrive
         private List<GangsDriverSet> driverSet;
         private int maxDriverSize;
 
-        public GangsDriveManager(int maxDriverSize)
+        private static GangsDriveManager _instance;
+        public static GangsDriveManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                    _instance = new GangsDriveManager(5);
+
+                return _instance;
+            }
+        }
+
+        private GangsDriveManager(int maxDriverSize)
         {
             this.driverSet = new List<GangsDriverSet>();
             this.maxDriverSize = maxDriverSize;
