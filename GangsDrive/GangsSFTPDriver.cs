@@ -35,24 +35,39 @@ namespace GangsDrive
             this._isMounted = false;
         }
 
+        private string ToUnixStylePath(string winPath)
+        {
+            return string.Format(@"/{0}", winPath.Replace(@"\", "/"));
+        }
+
         #region Implementation of IDokanOperations
         public void Cleanup(string fileName, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            if(info.Context != null && info.Context is SftpFileStream)
+            {
+                (info.Context as SftpFileStream).Dispose();
+            }
+            info.Context = null;
         }
 
         public void CloseFile(string fileName, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            if (info.Context != null && info.Context is SftpFileStream)
+            {
+                (info.Context as SftpFileStream).Dispose();
+            }
+            info.Context = null;
         }
 
         public NtStatus CreateDirectory(string fileName, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Error;
         }
 
         public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
         {
+            fileName = ToUnixStylePath(fileName);
+
             if (fileName.EndsWith("desktop.ini", StringComparison.OrdinalIgnoreCase) ||
                 fileName.EndsWith("autorun.inf", StringComparison.OrdinalIgnoreCase)) //....
             {
@@ -60,6 +75,7 @@ namespace GangsDrive
             }
 
             // todo : add to memory cache
+            bool exists = sftpClient.Exists(fileName);
             SftpFileAttributes attr = sftpClient.GetAttributes(fileName);
             bool readWriteAttributes = (access & DataAccess) == 0;
             bool readAccess = (access & DataWriteAccess) == 0;
@@ -68,20 +84,20 @@ namespace GangsDrive
             switch(mode)
             {
                 case FileMode.Open:
-                    if (attr == null)
+                    if (!exists)
                         return DokanResult.FileNotFound;
 
                     if (readWriteAttributes || attr.IsDirectory)
                     {
                         info.IsDirectory = attr.IsDirectory;
-                        info.Context = sftpClient.Open(fileName, FileMode.Open);
+                        info.Context = new object();
                         return DokanResult.Success;
                     }
 
                     break;
 
                 case FileMode.CreateNew:
-                    if (attr != null)
+                    if (exists)
                         return DokanResult.AlreadyExists;
 
                     // cache invalidate
@@ -89,7 +105,7 @@ namespace GangsDrive
                     break;
 
                 case FileMode.Truncate:
-                    if (attr == null)
+                    if (exists)
                         return DokanResult.FileNotFound;
                     // cache invalidate
                     break;
@@ -101,7 +117,7 @@ namespace GangsDrive
 
             try
             {
-                info.Context = sftpClient.Open(fileName, mode, acs) as Stream;
+                info.Context = sftpClient.Open(fileName, mode, acs) as SftpFileStream;
             }
             catch(Renci.SshNet.Common.SshException)
             {
@@ -113,107 +129,206 @@ namespace GangsDrive
 
         public NtStatus DeleteDirectory(string fileName, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Error;
         }
 
         public NtStatus DeleteFile(string fileName, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Error;
         }
 
         public NtStatus EnumerateNamedStreams(string fileName, IntPtr enumContext, out string streamName, out long streamSize, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            streamName = String.Empty;
+            streamSize = 0;
+            return DokanResult.NotImplemented;
         }
 
         public NtStatus FindFiles(string fileName, out IList<FileInformation> files, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            List<SftpFile> fileList = sftpClient.ListDirectory(ToUnixStylePath(fileName)).ToList();
+            files = new List<FileInformation>();
+
+            foreach(var file in fileList)
+            {
+                FileInformation finfo = new FileInformation();
+                SftpFileAttributes attr = sftpClient.GetAttributes(file.FullName);
+
+                finfo.FileName = file.Name;
+                finfo.Attributes = FileAttributes.NotContentIndexed;
+                finfo.CreationTime = file.LastWriteTime;
+                finfo.LastAccessTime = file.LastAccessTime;
+                finfo.LastWriteTime = file.LastWriteTime;
+                finfo.Length = file.Length;
+
+                if(file.IsDirectory)
+                {
+                    finfo.Attributes |= FileAttributes.Directory;
+                    finfo.Length = 0;
+                }
+                else
+                {
+                    finfo.Attributes |= FileAttributes.Normal;
+                }
+
+                if(finfo.FileName.StartsWith("."))
+                {
+                    finfo.Attributes |= FileAttributes.Hidden;
+                }
+
+                // todo :
+                // readonly check
+
+                files.Add(finfo);
+            }
+
+
+            return DokanResult.Success;
         }
 
         public NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            ((SftpFileStream)(info.Context)).Flush();
+            return DokanResult.Success;
         }
 
         public NtStatus GetDiskFreeSpace(out long freeBytesAvailable, out long totalNumberOfBytes, out long totalNumberOfFreeBytes, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            freeBytesAvailable = 512 * 1024 * 1024;
+            totalNumberOfBytes = 1024 * 1024 * 1024;
+            totalNumberOfFreeBytes = 512 * 1024 * 1024;
+
+            return DokanResult.Success;
         }
 
         public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            SftpFile file = sftpClient.Get(ToUnixStylePath(fileName));
+
+            fileInfo = new FileInformation()
+            {
+                FileName = file.Name,
+                Attributes = FileAttributes.NotContentIndexed,
+                CreationTime = file.LastWriteTime,
+                LastAccessTime = file.LastAccessTime,
+                LastWriteTime = file.LastWriteTime,
+                Length = file.Length
+            };
+
+            if (file.IsDirectory)
+            {
+                fileInfo.Attributes |= FileAttributes.Directory;
+                fileInfo.Length = 0;
+            }
+            else
+            {
+                fileInfo.Attributes |= FileAttributes.Normal;
+            }
+
+            if (fileInfo.FileName.StartsWith("."))
+            {
+                fileInfo.Attributes |= FileAttributes.Hidden;
+            }
+
+            // todo :
+            // readonly check
+
+            return DokanResult.Success;
         }
 
         public NtStatus GetFileSecurity(string fileName, out System.Security.AccessControl.FileSystemSecurity security, System.Security.AccessControl.AccessControlSections sections, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            security = null;
+            return DokanResult.Error;
         }
 
         public NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            volumeLabel = host;
+            fileSystemName = "GangsDrive";
+
+            features = FileSystemFeatures.None;
+
+            return DokanResult.Success;
         }
 
         public NtStatus LockFile(string fileName, long offset, long length, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Success;
         }
 
         public NtStatus MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Error;
         }
 
         public NtStatus OpenDirectory(string fileName, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            if (!sftpClient.Exists(ToUnixStylePath(fileName)))
+                return DokanResult.PathNotFound;
+
+            return DokanResult.Success;
         }
 
         public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            if(info.Context == null)
+            {
+                using (SftpFileStream stream = sftpClient.Open(ToUnixStylePath(fileName), FileMode.Open, System.IO.FileAccess.Read))
+                {
+                    stream.Position = offset;
+                    bytesRead = stream.Read(buffer, 0, buffer.Length);
+                }
+            }
+            else
+            {
+                SftpFileStream stream = info.Context as SftpFileStream;
+                stream.Position = offset;
+                bytesRead = stream.Read(buffer, 0, buffer.Length);
+            }
+
+            return DokanResult.Success;
         }
 
         public NtStatus SetAllocationSize(string fileName, long length, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Error;
         }
 
         public NtStatus SetEndOfFile(string fileName, long length, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Error;
         }
 
         public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Error;
         }
 
         public NtStatus SetFileSecurity(string fileName, System.Security.AccessControl.FileSystemSecurity security, System.Security.AccessControl.AccessControlSections sections, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Error;
         }
 
         public NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Error;
         }
 
         public NtStatus UnlockFile(string fileName, long offset, long length, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Success;
         }
 
         public NtStatus Unmount(DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            return DokanResult.Success;
         }
 
         public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, DokanFileInfo info)
         {
-            throw new NotImplementedException();
+            bytesWritten = 0;
+            return DokanResult.Error;
         } 
         #endregion
 

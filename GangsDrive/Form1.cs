@@ -19,11 +19,13 @@ namespace GangsDrive
     {
         GangsDriveManager manager;
         int isoIndex;
+        int sftpIndex;
 
         public Form1()
         {
             manager = GangsDriveManager.Instance;
             isoIndex = manager.AddDriver(new GangsISODriver(@"D:\GangsBox_WebDAV\Installer\AcrobatPro11.iso", "i:\\"));
+            sftpIndex = manager.AddDriver(new GangsSFTPDriver("host", 22, "root", "passwd", "s:\\"));
 
             InitializeComponent();
         }
@@ -56,6 +58,16 @@ namespace GangsDrive
             tt.Close();
             isoReader.Dispose();
             isoFileStream.Close();
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            manager.MountDriver(sftpIndex);
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            manager.UnmountDriver(sftpIndex);
         }
 
 
