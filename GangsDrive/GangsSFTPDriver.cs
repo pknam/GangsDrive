@@ -36,22 +36,22 @@ namespace GangsDrive
         }
 
         #region Implementation of IDokanOperations
-        void Cleanup(string fileName, DokanFileInfo info)
+        public void Cleanup(string fileName, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        void CloseFile(string fileName, DokanFileInfo info)
+        public void CloseFile(string fileName, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus CreateDirectory(string fileName, DokanFileInfo info)
+        public NtStatus CreateDirectory(string fileName, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
+        public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
         {
             if (fileName.EndsWith("desktop.ini", StringComparison.OrdinalIgnoreCase) ||
                 fileName.EndsWith("autorun.inf", StringComparison.OrdinalIgnoreCase)) //....
@@ -111,124 +111,124 @@ namespace GangsDrive
             return DokanResult.Success;
         }
 
-        NtStatus DeleteDirectory(string fileName, DokanFileInfo info)
+        public NtStatus DeleteDirectory(string fileName, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus DeleteFile(string fileName, DokanFileInfo info)
+        public NtStatus DeleteFile(string fileName, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus EnumerateNamedStreams(string fileName, IntPtr enumContext, out string streamName, out long streamSize, DokanFileInfo info)
+        public NtStatus EnumerateNamedStreams(string fileName, IntPtr enumContext, out string streamName, out long streamSize, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus FindFiles(string fileName, out IList<FileInformation> files, DokanFileInfo info)
+        public NtStatus FindFiles(string fileName, out IList<FileInformation> files, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
+        public NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus GetDiskFreeSpace(out long freeBytesAvailable, out long totalNumberOfBytes, out long totalNumberOfFreeBytes, DokanFileInfo info)
+        public NtStatus GetDiskFreeSpace(out long freeBytesAvailable, out long totalNumberOfBytes, out long totalNumberOfFreeBytes, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, DokanFileInfo info)
+        public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus GetFileSecurity(string fileName, out System.Security.AccessControl.FileSystemSecurity security, System.Security.AccessControl.AccessControlSections sections, DokanFileInfo info)
+        public NtStatus GetFileSecurity(string fileName, out System.Security.AccessControl.FileSystemSecurity security, System.Security.AccessControl.AccessControlSections sections, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName, DokanFileInfo info)
+        public NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus LockFile(string fileName, long offset, long length, DokanFileInfo info)
+        public NtStatus LockFile(string fileName, long offset, long length, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
+        public NtStatus MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus OpenDirectory(string fileName, DokanFileInfo info)
+        public NtStatus OpenDirectory(string fileName, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
+        public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus SetAllocationSize(string fileName, long length, DokanFileInfo info)
+        public NtStatus SetAllocationSize(string fileName, long length, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus SetEndOfFile(string fileName, long length, DokanFileInfo info)
+        public NtStatus SetEndOfFile(string fileName, long length, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus SetFileAttributes(string fileName, FileAttributes attributes, DokanFileInfo info)
+        public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus SetFileSecurity(string fileName, System.Security.AccessControl.FileSystemSecurity security, System.Security.AccessControl.AccessControlSections sections, DokanFileInfo info)
+        public NtStatus SetFileSecurity(string fileName, System.Security.AccessControl.FileSystemSecurity security, System.Security.AccessControl.AccessControlSections sections, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, DokanFileInfo info)
+        public NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus UnlockFile(string fileName, long offset, long length, DokanFileInfo info)
+        public NtStatus UnlockFile(string fileName, long offset, long length, DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus Unmount(DokanFileInfo info)
+        public NtStatus Unmount(DokanFileInfo info)
         {
             throw new NotImplementedException();
         }
 
-        NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, DokanFileInfo info)
+        public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, DokanFileInfo info)
         {
             throw new NotImplementedException();
         } 
         #endregion
 
         #region Implementation of IGangsDriver
-        string MountPoint
+        public string MountPoint
         {
             get { return _mountPoint; }
         }
 
-        bool IsMounted
+        public bool IsMounted
         {
             get { return _isMounted; }
         }
 
-        void Mount()
+        public void Mount()
         {
             if (IsMounted)
                 return;
@@ -241,7 +241,7 @@ namespace GangsDrive
             this.Mount(this.MountPoint, DokanOptions.DebugMode, 5);
         }
 
-        void ClearMountPoint()
+        public void ClearMountPoint()
         {
             if (!IsMounted)
                 return;

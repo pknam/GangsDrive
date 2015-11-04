@@ -35,12 +35,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DiscUtils, Version=0.11.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>packages\discutils\DiscUtils.dll</HintPath>
+      <HintPath>..\packages\Discutils.0.11.0.2\lib\net40\DiscUtils.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="DiscUtils.Common, Version=0.11.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Discutils.0.11.0.2\lib\net40\DiscUtils.Common.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="DokanNet, Version=1.0.8.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>packages\dokan\DokanNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Renci.SshNet, Version=2013.4.7.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SSH.NET.2013.4.7\lib\net40\Renci.SshNet.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -62,6 +70,7 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="GangsDriveManager.cs" />
+    <Compile Include="GangsSFTPDriver.cs" />
     <Compile Include="IGangsDriver.cs" />
     <Compile Include="GangsISODriver.cs" />
     <Compile Include="Mirror.cs" />
@@ -80,6 +89,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
