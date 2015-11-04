@@ -24,7 +24,7 @@ namespace GangsDrive
         private FileStream isoFileStream;
         private CDReader isoReader;
 
-        private readonly string mountPoint;
+        private readonly string _mountPoint;
         private bool _isMounted;
 
         public GangsISODriver(string isoPath, string mountPoint)
@@ -35,7 +35,8 @@ namespace GangsDrive
             this.isoPath = isoPath;
             this.isoFileStream = null;
             this.isoReader = null;
-            this.mountPoint = mountPoint;
+            this._mountPoint = mountPoint;
+            this._isMounted = false;
         }
 
         #region Implementation of IDokanOperations
@@ -369,7 +370,7 @@ namespace GangsDrive
         {
             get
             {
-                return this.mountPoint;
+                return this._mountPoint;
             }
         }
 
