@@ -63,7 +63,7 @@ namespace GangsDrive
                         else
                         {
                             info.IsDirectory = false;
-                            info.Context = this.isoReader.OpenFile(fileName, mode, readAccess ? System.IO.FileAccess.Read : System.IO.FileAccess.ReadWrite) as Stream;
+                            info.Context = this.isoReader.OpenFile(fileName, mode, System.IO.FileAccess.Read) as Stream;
                         }
                     }
                     else
