@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Diagnostics;
 using DokanNet;
 using FileAccess = DokanNet.FileAccess;
 using Renci.SshNet;
@@ -37,7 +38,7 @@ namespace GangsDrive
 
         private string ToUnixStylePath(string winPath)
         {
-            return string.Format(@"/{0}", winPath.Replace(@"\", "/"));
+            return string.Format(@"/{0}", winPath.Replace(@"\", @"/").Replace("//", "/"));
         }
 
         #region Implementation of IDokanOperations
@@ -66,10 +67,12 @@ namespace GangsDrive
 
         public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
         {
+            Debug.WriteLine(@"{0} : {1} {2}", fileName, mode.ToString(), access.ToString());
+
             fileName = ToUnixStylePath(fileName);
 
             if (fileName.EndsWith("desktop.ini", StringComparison.OrdinalIgnoreCase) ||
-                fileName.EndsWith("autorun.inf", StringComparison.OrdinalIgnoreCase)) //....
+                fileName.EndsWith("autorun.inf", StringComparison.OrdinalIgnoreCase))
             {
                 return DokanResult.FileNotFound;
             }
@@ -84,10 +87,11 @@ namespace GangsDrive
             switch(mode)
             {
                 case FileMode.Open:
+
                     if (!exists)
                         return DokanResult.FileNotFound;
 
-                    if (readWriteAttributes || attr.IsDirectory)
+                    if (((uint)access & 0xe0000027) == 0 || attr.IsDirectory)
                     {
                         info.IsDirectory = attr.IsDirectory;
                         info.Context = new object();
@@ -105,7 +109,7 @@ namespace GangsDrive
                     break;
 
                 case FileMode.Truncate:
-                    if (exists)
+                    if (!exists)
                         return DokanResult.FileNotFound;
                     // cache invalidate
                     break;
@@ -146,7 +150,18 @@ namespace GangsDrive
 
         public NtStatus FindFiles(string fileName, out IList<FileInformation> files, DokanFileInfo info)
         {
-            List<SftpFile> fileList = sftpClient.ListDirectory(ToUnixStylePath(fileName)).ToList();
+            List<SftpFile> fileList;
+            
+            try
+            {
+                fileList = sftpClient.ListDirectory(ToUnixStylePath(fileName)).ToList();
+            }
+            catch(Renci.SshNet.Common.SftpPermissionDeniedException)
+            {
+                files = null;
+                return DokanResult.AccessDenied;
+            }
+
             files = new List<FileInformation>();
 
             foreach(var file in fileList)
@@ -182,21 +197,20 @@ namespace GangsDrive
                 files.Add(finfo);
             }
 
-
             return DokanResult.Success;
         }
 
         public NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
         {
-            ((SftpFileStream)(info.Context)).Flush();
+            (info.Context as SftpFileStream).Flush();
             return DokanResult.Success;
         }
 
-        public NtStatus GetDiskFreeSpace(out long freeBytesAvailable, out long totalNumberOfBytes, out long totalNumberOfFreeBytes, DokanFileInfo info)
+        public NtStatus GetDiskFreeSpace(out long free, out long total, out long used, DokanFileInfo info)
         {
-            freeBytesAvailable = 512 * 1024 * 1024;
-            totalNumberOfBytes = 1024 * 1024 * 1024;
-            totalNumberOfFreeBytes = 512 * 1024 * 1024;
+            free = 512 * 1024 * 1024;
+            total = 1024 * 1024 * 1024;
+            used = 512 * 1024 * 1024;
 
             return DokanResult.Success;
         }
@@ -283,8 +297,11 @@ namespace GangsDrive
             else
             {
                 SftpFileStream stream = info.Context as SftpFileStream;
-                stream.Position = offset;
-                bytesRead = stream.Read(buffer, 0, buffer.Length);
+                lock (stream)
+                {
+                    stream.Position = offset;
+                    bytesRead = stream.Read(buffer, 0, buffer.Length);
+                }
             }
 
             return DokanResult.Success;
@@ -292,17 +309,19 @@ namespace GangsDrive
 
         public NtStatus SetAllocationSize(string fileName, long length, DokanFileInfo info)
         {
-            return DokanResult.Error;
+            (info.Context as SftpFileStream).SetLength(length);
+            return DokanResult.Success;
         }
 
         public NtStatus SetEndOfFile(string fileName, long length, DokanFileInfo info)
         {
-            return DokanResult.Error;
+            (info.Context as SftpFileStream).SetLength(length);
+            return DokanResult.Success;
         }
 
         public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, DokanFileInfo info)
         {
-            return DokanResult.Error;
+            return DokanResult.Success;
         }
 
         public NtStatus SetFileSecurity(string fileName, System.Security.AccessControl.FileSystemSecurity security, System.Security.AccessControl.AccessControlSections sections, DokanFileInfo info)
@@ -312,7 +331,7 @@ namespace GangsDrive
 
         public NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime, DateTime? lastWriteTime, DokanFileInfo info)
         {
-            return DokanResult.Error;
+            return DokanResult.Success;
         }
 
         public NtStatus UnlockFile(string fileName, long offset, long length, DokanFileInfo info)

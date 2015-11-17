@@ -24,20 +24,7 @@ namespace GangsDrive
         public Form1()
         {
             manager = GangsDriveManager.Instance;
-            isoIndex = manager.AddDriver(new GangsISODriver(@"D:\GangsBox_WebDAV\Installer\AcrobatPro11.iso", "i:\\"));
-            sftpIndex = manager.AddDriver(new GangsSFTPDriver("host", 22, "root", "passwd", "s:\\"));
-
             InitializeComponent();
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            manager.MountDriver(isoIndex);
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            manager.UnmountDriver(isoIndex);
         }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
@@ -45,27 +32,29 @@ namespace GangsDrive
             manager.UnmountAllDriver();
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void btnIsoStart_Click(object sender, EventArgs e)
         {
-            FileStream isoFileStream = File.Open(@"D:\GangsBox_WebDAV\Installer\AcrobatPro11.iso", FileMode.Open, System.IO.FileAccess.Read, FileShare.None);
-            CDReader isoReader = new CDReader(isoFileStream, true);
-            Stream tt = isoReader.OpenFile("ReadMe.htm", FileMode.Open);
-            byte[] buf = new byte[100];
-            tt.Position = 1;
-            tt.Read(buf, 0, 90);
-            MessageBox.Show(Encoding.Default.GetString(buf));
-
-            tt.Close();
-            isoReader.Dispose();
-            isoFileStream.Close();
+            isoIndex = manager.AddDriver(new GangsISODriver(tbIsoPath.Text, "i:\\"));
+            manager.MountDriver(isoIndex);
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private void btnIsoStop_Click(object sender, EventArgs e)
         {
+            manager.UnmountDriver(isoIndex);
+        }
+
+        private void btnSftpStart_Click(object sender, EventArgs e)
+        {
+            sftpIndex = manager.AddDriver(new GangsSFTPDriver(
+                tbSftpHost.Text,
+                Convert.ToInt32(tbSftpPort.Text),
+                tbSftpUsername.Text,
+                tbSftpPasswd.Text,
+                "s:\\"));
             manager.MountDriver(sftpIndex);
         }
 
-        private void button5_Click(object sender, EventArgs e)
+        private void btnSftpStop_Click(object sender, EventArgs e)
         {
             manager.UnmountDriver(sftpIndex);
         }

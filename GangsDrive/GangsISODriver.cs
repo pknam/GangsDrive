@@ -168,7 +168,6 @@ namespace GangsDrive
             return DokanResult.Success;
         }
 
-        // check
         public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, DokanFileInfo info)
         {
             DiscUtils.DiscFileSystemInfo finfo;
@@ -192,40 +191,6 @@ namespace GangsDrive
                 LastWriteTime = finfo.LastAccessTime,
                 Length = (finfo is DiscUtils.DiscDirectoryInfo) ? 0 : ((DiscUtils.DiscFileInfo)finfo).Length,
             };
-
-            //if(this.isoReader.DirectoryExists(fileName))
-            //{
-            //    DiscUtils.DiscDirectoryInfo discDirInfo = this.isoReader.GetDirectoryInfo(fileName);
-
-            //    fileInfo = new FileInformation
-            //    {
-            //        FileName = fileName,
-            //        Attributes = discDirInfo.Attributes,
-            //        CreationTime = discDirInfo.CreationTime,
-            //        LastAccessTime = discDirInfo.LastAccessTime,
-            //        LastWriteTime = discDirInfo.LastAccessTime,
-            //        Length = 0,
-            //    };
-            //}
-            //else if(this.isoReader.FileExists(fileName))
-            //{
-            //    DiscUtils.DiscFileInfo discFileInfo = this.isoReader.GetFileInfo(fileName);
-
-            //    fileInfo = new FileInformation
-            //    {
-            //        FileName = fileName,
-            //        Attributes = discFileInfo.Attributes,
-            //        CreationTime = discFileInfo.CreationTime,
-            //        LastAccessTime = discFileInfo.LastAccessTime,
-            //        LastWriteTime = discFileInfo.LastAccessTime,
-            //        Length = discFileInfo.Length,
-            //    };
-            //}
-            //else
-            //{
-            //    fileInfo = new FileInformation();
-            //    return DokanResult.FileNotFound;
-            //}
 
             return DokanResult.Success;
         }
