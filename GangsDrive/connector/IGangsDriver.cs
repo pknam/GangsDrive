@@ -7,8 +7,10 @@ namespace GangsDrive
 {
     interface IGangsDriver
     {
+        string DriverName { get; }
         string MountPoint { get; }
         bool IsMounted { get; }
+        event EventHandler<connector.MountChangedArgs> OnMountChangedEvent;
 
         void Mount();
         void ClearMountPoint();

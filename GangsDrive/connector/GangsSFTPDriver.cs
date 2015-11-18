@@ -26,7 +26,9 @@ namespace GangsDrive
         private SftpClient sftpClient;
 
         private readonly string _mountPoint;
+        private readonly string _driverName = "SFTP";
         private bool _isMounted;
+        public event EventHandler<connector.MountChangedArgs> OnMountChangedEvent;
 
         public GangsSFTPDriver(string host, int port, string username, string password, string mountPoint)
         {
@@ -362,6 +364,11 @@ namespace GangsDrive
             get { return _isMounted; }
         }
 
+        public string DriverName
+        {
+            get { return _driverName; }
+        }
+
         public void Mount()
         {
             if (IsMounted)
@@ -372,6 +379,7 @@ namespace GangsDrive
                 throw new Exception("cannot connect");
 
             this._isMounted = true;
+            OnMountChanged(new connector.MountChangedArgs(_isMounted));
             this.Mount(this.MountPoint, DokanOptions.DebugMode, 5);
         }
 
@@ -382,6 +390,7 @@ namespace GangsDrive
 
             Dokan.RemoveMountPoint(this.MountPoint);
             this._isMounted = false;
+            OnMountChanged(new connector.MountChangedArgs(_isMounted));
 
             if (sftpClient.IsConnected)
             {
@@ -390,5 +399,14 @@ namespace GangsDrive
             }
         } 
         #endregion
+
+        protected virtual void OnMountChanged(connector.MountChangedArgs e)
+        {
+            EventHandler<connector.MountChangedArgs> handler = OnMountChangedEvent;
+
+            if (handler != null)
+                handler(this, e);
+        }
+
     }
 }
