@@ -5,7 +5,7 @@ using System.Text;
 
 namespace GangsDrive.connector
 {
-    class MountChangedArgs
+    class MountChangedArgs : EventArgs
     {
         private bool _mountState;
 
