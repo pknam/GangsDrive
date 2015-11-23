@@ -63,6 +63,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="connector\GangsISODriver.cs" />
+    <Compile Include="connector\GangsSFTPDriver.cs" />
+    <Compile Include="connector\IGangsDriver.cs" />
+    <Compile Include="connector\MountChangedArgs.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -70,9 +74,6 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="GangsDriveManager.cs" />
-    <Compile Include="GangsSFTPDriver.cs" />
-    <Compile Include="IGangsDriver.cs" />
-    <Compile Include="GangsISODriver.cs" />
     <Compile Include="Mirror.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
