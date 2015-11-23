@@ -273,7 +273,24 @@ namespace GangsDrive
 
         public NtStatus MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
         {
-            return DokanResult.Error;
+            if (!sftpClient.Exists(newName))
+            {
+                info.Context = null;
+                sftpClient.RenameFile(oldName, newName);
+            }
+            else if(replace)
+            {
+                info.Context = null;
+
+                sftpClient.Delete(newName);
+                sftpClient.RenameFile(oldName, newName);
+            }
+            else
+            {
+                return DokanResult.FileExists;
+            }
+
+            return DokanResult.Success;
         }
 
         public NtStatus OpenDirectory(string fileName, DokanFileInfo info)
@@ -346,8 +363,23 @@ namespace GangsDrive
 
         public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, DokanFileInfo info)
         {
-            bytesWritten = 0;
-            return DokanResult.Error;
+            if(info.Context == null)
+            {
+                using(SftpFileStream stream = sftpClient.Open(fileName, FileMode.Open, System.IO.FileAccess.Write))
+                {
+                    stream.Position = offset;
+                    stream.Write(buffer, 0, buffer.Length);
+                    bytesWritten = buffer.Length;
+                }
+            }
+            else
+            {
+                var stream = info.Context as SftpFileStream;
+                stream.Write(buffer, 0, buffer.Length);
+                bytesWritten = buffer.Length;
+            }
+
+            return DokanResult.Success;
         } 
         #endregion
 
