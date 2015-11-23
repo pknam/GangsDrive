@@ -25,7 +25,9 @@ namespace GangsDrive
         private CDReader isoReader;
 
         private readonly string _mountPoint;
+        private readonly string _driverName = "ISO";
         private bool _isMounted;
+        public event EventHandler<connector.MountChangedArgs> OnMountChangedEvent;
 
         public GangsISODriver(string isoPath, string mountPoint)
         {
@@ -339,6 +341,14 @@ namespace GangsDrive
             }
         }
 
+        public string DriverName
+        {
+            get
+            {
+                return this._driverName;
+            }
+        }
+
         public void ClearMountPoint()
         {
             if (IsMounted)
@@ -352,6 +362,7 @@ namespace GangsDrive
                     this.isoFileStream.Dispose();
 
                 this._isMounted = false;
+                OnMountChanged(new connector.MountChangedArgs(_isMounted));
             }
         }
         
@@ -364,12 +375,22 @@ namespace GangsDrive
                 throw new FileNotFoundException();
 
             this._isMounted = true;
+            OnMountChanged(new connector.MountChangedArgs(_isMounted));
             this.isoFileStream = File.Open(isoPath, FileMode.Open, System.IO.FileAccess.Read, FileShare.None);
             this.isoReader = new CDReader(this.isoFileStream, true);
             this.Mount(this.MountPoint, DokanOptions.DebugMode, 5);
         }
 
         #endregion
+
+        protected virtual void OnMountChanged(connector.MountChangedArgs e)
+        {
+            EventHandler<connector.MountChangedArgs> handler = OnMountChangedEvent;
+
+            if (handler != null)
+                handler(this, e);
+        }
+
     }
 
 }
