@@ -64,7 +64,22 @@ namespace GangsDrive
 
         public NtStatus CreateDirectory(string fileName, DokanFileInfo info)
         {
-            return DokanResult.Error;
+            //Debug.Print("CreateDirectory. filename : {0}", fileName);
+
+            fileName = ToUnixStylePath(fileName);
+
+            if(sftpClient.Exists(fileName))
+                return DokanResult.FileExists;
+
+            try
+            {
+                sftpClient.CreateDirectory(fileName);
+                return DokanResult.Success;
+            }
+            catch(Renci.SshNet.Common.SshException)
+            {
+                return DokanResult.AccessDenied;
+            }
         }
 
         public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode, FileOptions options, FileAttributes attributes, DokanFileInfo info)
@@ -106,6 +121,7 @@ namespace GangsDrive
                     if (exists)
                         return DokanResult.AlreadyExists;
 
+
                     // cache invalidate
 
                     break;
@@ -135,7 +151,23 @@ namespace GangsDrive
 
         public NtStatus DeleteDirectory(string fileName, DokanFileInfo info)
         {
-            return DokanResult.Error;
+            fileName = ToUnixStylePath(fileName);
+
+            if(!sftpClient.Exists(fileName))
+            {
+                return DokanResult.FileNotFound;
+            }
+
+            try
+            {
+                sftpClient.DeleteDirectory(fileName);
+            }
+            catch (Renci.SshNet.Common.SshException)
+            {
+                return DokanResult.AccessDenied;
+            }
+
+            return DokanResult.Success;
         }
 
         public NtStatus DeleteFile(string fileName, DokanFileInfo info)
