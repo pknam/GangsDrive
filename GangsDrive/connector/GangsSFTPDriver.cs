@@ -8,6 +8,7 @@ using DokanNet;
 using FileAccess = DokanNet.FileAccess;
 using Renci.SshNet;
 using Renci.SshNet.Sftp;
+using Renci.SshNet.Common;
 
 
 namespace GangsDrive
@@ -162,9 +163,13 @@ namespace GangsDrive
             {
                 sftpClient.DeleteDirectory(fileName);
             }
-            catch (Renci.SshNet.Common.SshException)
+            catch(SftpPermissionDeniedException)
             {
                 return DokanResult.AccessDenied;
+            }
+            catch (SshException)
+            {
+                return DokanResult.InvalidParameter;
             }
 
             return DokanResult.Success;
@@ -172,7 +177,27 @@ namespace GangsDrive
 
         public NtStatus DeleteFile(string fileName, DokanFileInfo info)
         {
-            return DokanResult.Error;
+            fileName = ToUnixStylePath(fileName);
+
+            if(!sftpClient.Exists(fileName))
+            {
+                return DokanResult.FileNotFound;
+            }
+
+            try
+            {
+                sftpClient.DeleteFile(fileName);
+            }
+            catch(SftpPermissionDeniedException)
+            {
+                return DokanResult.AccessDenied;
+            }
+            catch(SshException)
+            {
+                return DokanResult.InvalidParameter;
+            }
+
+            return DokanResult.Success;
         }
 
         public NtStatus EnumerateNamedStreams(string fileName, IntPtr enumContext, out string streamName, out long streamSize, DokanFileInfo info)
