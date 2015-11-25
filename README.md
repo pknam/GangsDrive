@@ -14,6 +14,7 @@ Virtual network drive application for Windows
 * [dokan-dotnet](https://github.com/dokan-dev/dokan-dotnet)
 * [DiscUtils](https://discutils.codeplex.com/)
 * [SSH.NET](https://sshnet.codeplex.com/)
+* [Google.Apis.Drive.v2 Client](https://github.com/google/google-api-dotnet-client)
 
 ## Support plan
 * ISO file
