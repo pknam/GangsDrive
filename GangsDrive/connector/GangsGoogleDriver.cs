@@ -53,10 +53,20 @@ namespace GangsDrive.connector
         #region Implementation of IDokanOperations
         public void Cleanup(string fileName, DokanFileInfo info)
         {
+            if (info.Context != null && info.Context is FileStream)
+            {
+                (info.Context as FileStream).Dispose();
+            }
+            info.Context = null;
         }
 
         public void CloseFile(string fileName, DokanFileInfo info)
         {
+            if (info.Context != null && info.Context is FileStream)
+            {
+                (info.Context as FileStream).Dispose();
+            }
+            info.Context = null;
         }
 
         public NtStatus CreateDirectory(string fileName, DokanFileInfo info)
@@ -94,6 +104,7 @@ namespace GangsDrive.connector
 
         public NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
         {
+            (info.Context as FileStream).Flush();
             return DokanResult.Success;
         }
 
@@ -145,17 +156,37 @@ namespace GangsDrive.connector
 
         public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
         {
-            bytesRead = 0;
+            if (info.Context != null)
+            {
+                using (var stream = new FileStream(fileName, FileMode.Open, System.IO.FileAccess.Read))
+                {
+                    stream.Position = offset;
+                    bytesRead = stream.Read(buffer, 0, buffer.Length);
+                }
+            }
+            else
+            {
+                FileStream stream = info.Context as FileStream;
+
+                lock (stream)
+                {
+                    stream.Position = offset;
+                    bytesRead = stream.Read(buffer, 0, buffer.Length);
+                }
+            }
+
             return DokanResult.Success;
         }
 
         public NtStatus SetAllocationSize(string fileName, long length, DokanFileInfo info)
         {
+            (info.Context as FileStream).SetLength(length);
             return DokanResult.Success;
         }
 
         public NtStatus SetEndOfFile(string fileName, long length, DokanFileInfo info)
         {
+            (info.Context as FileStream).SetLength(length);
             return DokanResult.Success;
         }
 
