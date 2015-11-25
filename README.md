@@ -1,6 +1,8 @@
-[![Build Status](https://travis-ci.org/pknam/GangsDrive.svg?branch=master)](https://travis-ci.org/pknam/GangsDrive)
+
 
 # GangsDrive
+[![Build Status](https://travis-ci.org/pknam/GangsDrive.svg?branch=master)](https://travis-ci.org/pknam/GangsDrive)
+
 Virtual network drive application for Windows
 
 ## Requirements
