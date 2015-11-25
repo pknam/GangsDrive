@@ -45,12 +45,20 @@ namespace GangsDrive
 
         private void btnSftpStart_Click(object sender, EventArgs e)
         {
-            sftpIndex = manager.AddDriver(new GangsSFTPDriver(
-                tbSftpHost.Text,
-                Convert.ToInt32(tbSftpPort.Text),
-                tbSftpUsername.Text,
-                tbSftpPasswd.Text,
-                "s:\\"));
+            try
+            {
+                sftpIndex = manager.AddDriver(new GangsSFTPDriver(
+                    tbSftpHost.Text,
+                    Convert.ToInt32(tbSftpPort.Text),
+                    tbSftpUsername.Text,
+                    tbSftpPasswd.Text,
+                    "s:\\"));
+            }
+            catch(FormatException)
+            {
+                MessageBox.Show("Invalid value : Port number");
+                return;
+            }
             manager.MountDriver(sftpIndex);
         }
 

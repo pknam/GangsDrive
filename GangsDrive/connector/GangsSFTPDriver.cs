@@ -9,6 +9,8 @@ using FileAccess = DokanNet.FileAccess;
 using Renci.SshNet;
 using Renci.SshNet.Sftp;
 using Renci.SshNet.Common;
+using System.Windows.Forms;
+using System.Net.Sockets;
 
 
 namespace GangsDrive
@@ -24,6 +26,7 @@ namespace GangsDrive
                                                    FileAccess.GenericWrite;
 
         private string host;
+        private int port;
         private SftpClient sftpClient;
 
         private readonly string _mountPoint;
@@ -34,6 +37,7 @@ namespace GangsDrive
         public GangsSFTPDriver(string host, int port, string username, string password, string mountPoint)
         {
             this.host = host;
+            this.port = port;
             this.sftpClient = new SftpClient(host, port, username, password);
             this._mountPoint = mountPoint;
             this._isMounted = false;
@@ -463,9 +467,33 @@ namespace GangsDrive
             if (IsMounted)
                 return;
 
-            sftpClient.Connect();
+            try
+            {
+                sftpClient.Connect();
+            }
+            catch(SocketException)
+            {
+                MessageBox.Show(string.Format("Cannot Connect to {0}:{1}", host, port));
+                return;
+            }
+            catch(SshAuthenticationException)
+            {
+                MessageBox.Show("Invalid username or password");
+            }
+            catch(Exception e)
+            {
+                MessageBox.Show(e.ToString());
+                return;
+            }
+
+
             if (!sftpClient.IsConnected)
-                throw new Exception("cannot connect");
+            {
+                MessageBox.Show("cannot connect");
+                return;
+            }
+
+
 
             this._isMounted = true;
             OnMountChanged(new connector.MountChangedArgs(_isMounted));
