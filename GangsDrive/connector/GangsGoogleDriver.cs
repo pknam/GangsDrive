@@ -104,8 +104,14 @@ namespace GangsDrive.connector
 
         public NtStatus FlushFileBuffers(string fileName, DokanFileInfo info)
         {
-            (info.Context as FileStream).Flush();
-            return DokanResult.Success;
+            if (info.Context != null)
+            {
+                (info.Context as FileStream).Flush();
+
+                return DokanResult.Success;
+            }
+            else return DokanResult.Unsuccessful;
+            
         }
 
         public NtStatus GetDiskFreeSpace(out long free, out long total, out long used, DokanFileInfo info)
@@ -156,38 +162,55 @@ namespace GangsDrive.connector
 
         public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
         {
-            if (info.Context != null)
+            try
             {
-                using (var stream = new FileStream(fileName, FileMode.Open, System.IO.FileAccess.Read))
+                if (info.Context != null)
                 {
-                    stream.Position = offset;
-                    bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    using (var stream = new FileStream(fileName, FileMode.Open, System.IO.FileAccess.Read))
+                    {
+                        stream.Position = offset;
+                        bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    }
                 }
+                else
+                {
+                    FileStream stream = info.Context as FileStream;
+
+                    lock (stream)
+                    {
+                        stream.Position = offset;
+                        bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    }
+                }
+
+                return DokanResult.Success;
             }
-            else
+            catch (FileNotFoundException e)
             {
-                FileStream stream = info.Context as FileStream;
-
-                lock (stream)
-                {
-                    stream.Position = offset;
-                    bytesRead = stream.Read(buffer, 0, buffer.Length);
-                }
+                GangsDrive.util.DriverError.DebugError(e, _driverName, _isMounted);
+                bytesRead = 0;
+                return DokanResult.FileNotFound;
             }
-
-            return DokanResult.Success;
         }
 
         public NtStatus SetAllocationSize(string fileName, long length, DokanFileInfo info)
         {
-            (info.Context as FileStream).SetLength(length);
-            return DokanResult.Success;
+            if (info.Context != null)
+            {
+                (info.Context as FileStream).SetLength(length);
+                return DokanResult.Success;
+            }
+            else return DokanResult.Unsuccessful;
         }
 
         public NtStatus SetEndOfFile(string fileName, long length, DokanFileInfo info)
         {
-            (info.Context as FileStream).SetLength(length);
-            return DokanResult.Success;
+            if (info.Context != null)
+            {
+                (info.Context as FileStream).SetLength(length);
+                return DokanResult.Success;
+            }
+            else return DokanResult.Unsuccessful;
         }
 
         public NtStatus SetFileAttributes(string fileName, FileAttributes attributes, DokanFileInfo info)
