@@ -127,7 +127,7 @@
     <Compile Include="connector\GangsGoogleDriver.cs" />
     <Compile Include="connector\GangsISODriver.cs" />
     <Compile Include="connector\GangsSFTPDriver.cs" />
-    <Compile Include="connector\IGangsDriver.cs" />
+    <Compile Include="connector\GangsDriver.cs" />
     <Compile Include="connector\MountChangedArgs.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>

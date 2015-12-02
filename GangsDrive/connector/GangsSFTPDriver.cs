@@ -15,7 +15,7 @@ using System.Net.Sockets;
 
 namespace GangsDrive
 {
-    class GangsSFTPDriver : IDokanOperations, IGangsDriver
+    class GangsSFTPDriver : GangsDriver, IDokanOperations
     {
         private const FileAccess DataAccess = FileAccess.ReadData | FileAccess.WriteData | FileAccess.AppendData |
                                          FileAccess.Execute |
@@ -29,18 +29,12 @@ namespace GangsDrive
         private int port;
         private SftpClient sftpClient;
 
-        private readonly string _mountPoint;
-        private readonly string _driverName = "SFTP";
-        private bool _isMounted;
-        public event EventHandler<connector.MountChangedArgs> OnMountChangedEvent;
-
         public GangsSFTPDriver(string host, int port, string username, string password, string mountPoint)
+            :base(mountPoint, "SFTP", false)
         {
             this.host = host;
             this.port = port;
             this.sftpClient = new SftpClient(host, port, username, password);
-            this._mountPoint = mountPoint;
-            this._isMounted = false;
         }
 
         private string ToUnixStylePath(string winPath)
@@ -446,23 +440,9 @@ namespace GangsDrive
         } 
         #endregion
 
-        #region Implementation of IGangsDriver
-        public string MountPoint
-        {
-            get { return _mountPoint; }
-        }
+        #region Overriding of GangsDriver
 
-        public bool IsMounted
-        {
-            get { return _isMounted; }
-        }
-
-        public string DriverName
-        {
-            get { return _driverName; }
-        }
-
-        public void Mount()
+        public override void Mount()
         {
             if (IsMounted)
                 return;
@@ -493,37 +473,23 @@ namespace GangsDrive
                 return;
             }
 
-
-
-            this._isMounted = true;
-            OnMountChanged(new connector.MountChangedArgs(_isMounted));
-            this.Mount(this.MountPoint, DokanOptions.DebugMode, 5);
+            base.Mount();
         }
 
-        public void ClearMountPoint()
+        public override void ClearMountPoint()
         {
+            base.ClearMountPoint();
+
             if (!IsMounted)
                 return;
 
-            Dokan.RemoveMountPoint(this.MountPoint);
-            this._isMounted = false;
-            OnMountChanged(new connector.MountChangedArgs(_isMounted));
 
             if (sftpClient.IsConnected)
             {
                 sftpClient.Disconnect();
                 sftpClient.Dispose();
             }
-        } 
-        #endregion
-
-        protected virtual void OnMountChanged(connector.MountChangedArgs e)
-        {
-            EventHandler<connector.MountChangedArgs> handler = OnMountChangedEvent;
-
-            if (handler != null)
-                handler(this, e);
         }
-
+        #endregion
     }
 }

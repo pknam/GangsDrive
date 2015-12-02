@@ -11,10 +11,10 @@ namespace GangsDrive
 {
     class GangsDriverSet
     {
-        IGangsDriver driver;
+        GangsDriver driver;
         Thread thread;
 
-        public GangsDriverSet(IGangsDriver driver)
+        public GangsDriverSet(GangsDriver driver)
         {
             this.driver = driver;
             this.thread = null;
@@ -71,7 +71,7 @@ namespace GangsDrive
             this.maxDriverSize = maxDriverSize;
         }
 
-        public int AddDriver(IGangsDriver driver)
+        public int AddDriver(GangsDriver driver)
         {
             if (this.driverSet.Count >= maxDriverSize)
                 throw new IndexOutOfRangeException();

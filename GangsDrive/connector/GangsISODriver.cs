@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace GangsDrive
 {
-    class GangsISODriver : IDokanOperations, IGangsDriver
+    class GangsISODriver : GangsDriver, IDokanOperations
     {
         private const FileAccess DataAccess = FileAccess.ReadData | FileAccess.WriteData | FileAccess.AppendData |
                                               FileAccess.Execute |
@@ -24,21 +24,16 @@ namespace GangsDrive
         private FileStream isoFileStream;
         private CDReader isoReader;
 
-        private readonly string _mountPoint;
-        private readonly string _driverName = "ISO";
-        private bool _isMounted;
-        public event EventHandler<connector.MountChangedArgs> OnMountChangedEvent;
-
         public GangsISODriver(string isoPath, string mountPoint)
+            :base(mountPoint, "ISO", false)
         {
+
             if (!File.Exists(isoPath))
                 throw new FileNotFoundException();
 
             this.isoPath = isoPath;
             this.isoFileStream = null;
             this.isoReader = null;
-            this._mountPoint = mountPoint;
-            this._isMounted = false;
         }
 
         #region Implementation of IDokanOperations
@@ -323,50 +318,25 @@ namespace GangsDrive
         } 
         #endregion
 
-        #region Implementation of IGangsDriver
+        #region Overriding of GangsDriver
 
-        public bool IsMounted
+
+        public override void ClearMountPoint()
         {
-            get
-            {
-                return _isMounted;
-            }
-        }
+            if (!IsMounted)
+                return;
 
-        public string MountPoint
-        {
-            get
-            {
-                return this._mountPoint;
-            }
-        }
+            base.ClearMountPoint();
 
-        public string DriverName
-        {
-            get
-            {
-                return this._driverName;
-            }
-        }
 
-        public void ClearMountPoint()
-        {
-            if (IsMounted)
-            {
-                Dokan.RemoveMountPoint(this.MountPoint);
-
-                if(this.isoReader != null)
-                    this.isoReader.Dispose();
+            if(this.isoReader != null)
+                this.isoReader.Dispose();
                 
-                if(this.isoFileStream != null)
-                    this.isoFileStream.Dispose();
-
-                this._isMounted = false;
-                OnMountChanged(new connector.MountChangedArgs(_isMounted));
-            }
+            if(this.isoFileStream != null)
+                this.isoFileStream.Dispose();
         }
-        
-        public void Mount()
+
+        public override void Mount()
         {
             if (IsMounted)
                 return;
@@ -374,23 +344,12 @@ namespace GangsDrive
             if (!File.Exists(this.isoPath))
                 throw new FileNotFoundException();
 
-            this._isMounted = true;
-            OnMountChanged(new connector.MountChangedArgs(_isMounted));
             this.isoFileStream = File.Open(isoPath, FileMode.Open, System.IO.FileAccess.Read, FileShare.None);
             this.isoReader = new CDReader(this.isoFileStream, true);
-            this.Mount(this.MountPoint, DokanOptions.DebugMode, 5);
+
+            base.Mount();
         }
 
         #endregion
-
-        protected virtual void OnMountChanged(connector.MountChangedArgs e)
-        {
-            EventHandler<connector.MountChangedArgs> handler = OnMountChangedEvent;
-
-            if (handler != null)
-                handler(this, e);
-        }
-
     }
-
 }

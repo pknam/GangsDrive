@@ -19,7 +19,7 @@ using Renci.SshNet.Sftp;
 
 namespace GangsDrive.connector
 {
-    class GangsGoogleDriver : IDokanOperations, IGangsDriver
+    class GangsGoogleDriver : GangsDriver, IDokanOperations
     {
         private const FileAccess DataAccess = FileAccess.ReadData | FileAccess.WriteData | FileAccess.AppendData |
                                  FileAccess.Execute |
@@ -29,10 +29,6 @@ namespace GangsDrive.connector
                                                    FileAccess.Delete |
                                                    FileAccess.GenericWrite;
 
-        private readonly string _mountPoint;
-        private readonly string _driverName = "Google";
-        private bool _isMounted;
-        public event EventHandler<connector.MountChangedArgs> OnMountChangedEvent;
 
         private const string CredentialPath = "../credentials";
         private string[] Scopes = { 
@@ -46,8 +42,8 @@ namespace GangsDrive.connector
         private DriveService _driveService;
 
         public GangsGoogleDriver(string mountPoint)
+            :base(mountPoint, "Google", false)
         {
-            this._mountPoint = mountPoint;
         }
 
         #region Implementation of IDokanOperations
@@ -245,23 +241,9 @@ namespace GangsDrive.connector
         } 
         #endregion
 
-        #region Implementation of IGangsDriver
-        public string MountPoint
-        {
-            get { return _mountPoint; }
-        }
+        #region Overriding of GangsDriver
 
-        public bool IsMounted
-        {
-            get { return _isMounted; }
-        }
-
-        public string DriverName
-        {
-            get { return _driverName; }
-        }
-
-        public void Mount()
+        public override void Mount()
         {
             if (IsMounted)
                 return;
@@ -285,31 +267,18 @@ namespace GangsDrive.connector
                 });
             }
 
-            this._isMounted = true;
-            OnMountChanged(new connector.MountChangedArgs(_isMounted));
-            this.Mount(this.MountPoint, DokanOptions.DebugMode, 5);
+            base.Mount();
         }
 
-        public void ClearMountPoint()
+        public override void ClearMountPoint()
         {
             if (!IsMounted)
                 return;
 
-            Dokan.RemoveMountPoint(this.MountPoint);
-            this._isMounted = false;
-            OnMountChanged(new connector.MountChangedArgs(_isMounted));
+            base.ClearMountPoint();
 
             _driveService.Dispose();
         }
         #endregion
-
-        protected virtual void OnMountChanged(connector.MountChangedArgs e)
-        {
-            EventHandler<connector.MountChangedArgs> handler = OnMountChangedEvent;
-
-            if (handler != null)
-                handler(this, e);
-        }
-
     }
 }
