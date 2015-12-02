@@ -13,11 +13,11 @@ namespace GangsDrive
         protected bool _isMounted;
         public event EventHandler<connector.MountChangedArgs> OnMountChangedEvent;
 
-        public GangsDriver(string _mountPoint, string _driverName, bool _isMounted)
+        public GangsDriver(string _mountPoint, string _driverName)
         {
             this._mountPoint = _mountPoint;
             this._driverName = _driverName;
-            this._isMounted = _isMounted;
+            this._isMounted = false;
         }
 
         public string MountPoint

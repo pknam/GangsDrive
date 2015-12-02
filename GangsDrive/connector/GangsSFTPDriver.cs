@@ -30,7 +30,7 @@ namespace GangsDrive
         private SftpClient sftpClient;
 
         public GangsSFTPDriver(string host, int port, string username, string password, string mountPoint)
-            :base(mountPoint, "SFTP", false)
+            :base(mountPoint, "SFTP")
         {
             this.host = host;
             this.port = port;

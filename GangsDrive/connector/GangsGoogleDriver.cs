@@ -42,7 +42,7 @@ namespace GangsDrive.connector
         private DriveService _driveService;
 
         public GangsGoogleDriver(string mountPoint)
-            :base(mountPoint, "Google", false)
+            :base(mountPoint, "Google")
         {
         }
 

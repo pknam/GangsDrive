@@ -25,7 +25,7 @@ namespace GangsDrive
         private CDReader isoReader;
 
         public GangsISODriver(string isoPath, string mountPoint)
-            :base(mountPoint, "ISO", false)
+            :base(mountPoint, "ISO")
         {
 
             if (!File.Exists(isoPath))
